@@ -3,338 +3,474 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InventoryPro | Cloud-Ready Management</title>
-    <!-- Tailwind CSS for modern, responsive styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>GRCITAM | Asset Governance & Compliance</title>
+    <!-- Tailwind CSS & QR Library -->
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .stock-row:hover { background-color: #f9fafb; }
-        /* Smooth transitions for UI elements */
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { border-bottom: 3px solid #6366f1; color: #4f46e5; }
+        .badge-risk-high { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .badge-risk-med { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-risk-low { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .asset-image-preview { width: 100%; height: 200px; object-fit: cover; border-radius: 1rem; border: 2px dashed #e2e8f0; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen pb-12">
+<body class="bg-slate-50 min-h-screen pb-12">
 
-    <!-- Header Navigation -->
-    <nav class="bg-white border-b sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Navigation -->
+    <nav class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center space-x-2">
-                    <div class="bg-blue-600 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-500 p-2 rounded-lg shadow-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                     </div>
-                    <span class="text-xl font-bold text-gray-900 tracking-tight">Inventory<span class="text-blue-600">Pro</span></span>
+                    <span class="text-2xl font-black text-white tracking-tighter uppercase">GRC<span class="text-indigo-400">ITAM</span></span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button onclick="toggleModal('productModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        Add Item
+                    <button onclick="downloadComplianceReport()" class="text-slate-400 hover:text-white text-xs font-bold uppercase transition flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m3 2h12a3 3 0 003-3V5a3 3 0 00-3-3H7a3 3 0 00-3 3v12a3 3 0 003 3z"></path></svg>
+                        Compliance Report
+                    </button>
+                    <button onclick="toggleModal('assetModal')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-xl font-extrabold transition shadow-lg text-sm">
+                        + Register Asset
                     </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Dashboard Statistics -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl border shadow-sm flex items-center space-x-4">
-                <div class="p-3 bg-blue-50 text-blue-600 rounded-full">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 font-medium">Total Products</p>
-                    <p id="statTotalItems" class="text-2xl font-bold text-gray-900">0</p>
-                </div>
+    <main class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                <p class="text-[10px] text-slate-400 font-black uppercase mb-1">Total Assets</p>
+                <p id="statTotalAssets" class="text-3xl font-black text-slate-900">0</p>
             </div>
-            <div class="bg-white p-6 rounded-xl border shadow-sm flex items-center space-x-4">
-                <div class="p-3 bg-yellow-50 text-yellow-600 rounded-full">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 font-medium">Low Stock Alerts</p>
-                    <p id="statLowStock" class="text-2xl font-bold text-gray-900">0</p>
-                </div>
+            <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                <p class="text-[10px] text-red-500 font-black uppercase mb-1">High Risk</p>
+                <p id="statHighRisk" class="text-3xl font-black text-red-600">0</p>
             </div>
-            <div class="bg-white p-6 rounded-xl border shadow-sm flex items-center space-x-4">
-                <div class="p-3 bg-green-50 text-green-600 rounded-full">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 font-medium">Inventory Value</p>
-                    <p id="statTotalValue" class="text-2xl font-bold text-gray-900">$0.00</p>
-                </div>
+            <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                <p class="text-[10px] text-amber-500 font-black uppercase mb-1">Non-Compliant</p>
+                <p id="statNonCompliant" class="text-3xl font-black text-amber-600">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                <p class="text-[10px] text-indigo-500 font-black uppercase mb-1">Portfolio Value</p>
+                <p id="statTotalValue" class="text-2xl font-black text-slate-900">$0.00</p>
+            </div>
+            <div class="bg-indigo-600 p-5 rounded-2xl shadow-xl text-white">
+                <p class="text-[10px] text-indigo-200 font-black uppercase mb-1">Asset Health</p>
+                <p id="statHealth" class="text-3xl font-black">100%</p>
             </div>
         </div>
 
-        <!-- Inventory List Section -->
-        <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <div class="p-4 border-b bg-gray-50/50 sm:flex items-center justify-between space-y-3 sm:space-y-0">
-                <h2 class="text-lg font-semibold text-gray-900">Product List</h2>
-                <div class="relative max-w-xs w-full">
-                    <input type="text" id="searchInput" onkeyup="renderInventory()" placeholder="Search SKU, Name..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <!-- Table -->
+        <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
+            <div class="p-6 border-b bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
+                <h2 class="text-xl font-black text-slate-900">Governance Register</h2>
+                <div class="relative max-w-xl w-full">
+                    <input type="text" id="searchInput" onkeyup="renderAssets()" placeholder="Search Serial, User, Brand, or SKU..." class="w-full pl-10 pr-4 py-3 bg-white border rounded-2xl outline-none focus:ring-4 focus:ring-indigo-100 transition">
+                    <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-medium">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left min-w-[1400px]">
+                    <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b">
                         <tr>
-                            <th class="px-6 py-4">Item Details</th>
-                            <th class="px-6 py-4">SKU</th>
-                            <th class="px-6 py-4">Category</th>
-                            <th class="px-6 py-4">Price</th>
-                            <th class="px-6 py-4">Quantity</th>
-                            <th class="px-6 py-4">Status</th>
+                            <th class="px-6 py-4">Visual/Identity</th>
+                            <th class="px-6 py-4">Linked Peripherals (SKU)</th>
+                            <th class="px-6 py-4">Specifications</th>
+                            <th class="px-6 py-4">Ownership/Dept</th>
+                            <th class="px-6 py-4">Maintenance History</th>
+                            <th class="px-6 py-4">Risk & Compliance</th>
                             <th class="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="inventoryList" class="divide-y divide-gray-200">
-                        <!-- Items will be injected here via JavaScript -->
-                    </tbody>
+                    <tbody id="assetList" class="divide-y divide-slate-100"></tbody>
                 </table>
-                <div id="emptyState" class="hidden p-12 text-center">
-                    <div class="mx-auto w-24 h-24 text-gray-300 mb-4">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                    </div>
-                    <p class="text-gray-500 text-lg font-medium">No items found.</p>
-                    <p class="text-gray-400 text-sm">Add a new item to get started.</p>
+                <div id="emptyState" class="hidden p-20 text-center">
+                    <p class="text-slate-400 text-lg font-bold">No assets found in the GRC register.</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modal for Adding/Editing Products -->
-    <div id="productModal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="toggleModal('productModal')"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-900" id="modalTitle">Add New Product</h3>
-                        <button onclick="toggleModal('productModal')" class="text-gray-400 hover:text-gray-500">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
+    <!-- Modal -->
+    <div id="assetModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" onclick="toggleModal('assetModal')"></div>
+            <div class="bg-white rounded-[32px] overflow-hidden shadow-2xl max-w-[1200px] w-full z-10 p-8 sm:p-12">
+                <div class="flex justify-between items-center mb-8 border-b pb-4">
+                    <div>
+                        <h3 class="text-3xl font-black text-slate-900" id="modalTitle">Register Asset</h3>
+                        <div class="flex space-x-6 mt-4">
+                            <button onclick="switchTab('general')" class="tab-btn active pb-2 text-xs font-black uppercase transition-all">General</button>
+                            <button onclick="switchTab('peripherals')" class="tab-btn pb-2 text-xs font-black uppercase transition-all">Peripherals</button>
+                            <button onclick="switchTab('maintenance')" class="tab-btn pb-2 text-xs font-black uppercase transition-all">Service Log</button>
+                            <button onclick="switchTab('media')" class="tab-btn pb-2 text-xs font-black uppercase transition-all">Media & QR</button>
+                        </div>
                     </div>
-                    <form id="productForm" class="space-y-4">
-                        <input type="hidden" id="editIndex" value="-1">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                            <input type="text" id="pName" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                                <input type="text" id="pSKU" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                                <select id="pCategory" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                                    <option value="Electronics">Electronics</option>
-                                    <option value="Office">Office</option>
-                                    <option value="Storage">Storage</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
-                                <input type="number" id="pPrice" step="0.01" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                                <input type="number" id="pQty" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Min. Stock</label>
-                                <input type="number" id="pMin" value="5" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea id="pDesc" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                        </div>
-                    </form>
+                    <button onclick="toggleModal('assetModal')" class="text-slate-400 p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" onclick="saveProduct()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                        Save Product
-                    </button>
-                    <button type="button" onclick="toggleModal('productModal')" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
-                    </button>
+
+                <form id="assetForm">
+                    <input type="hidden" id="editIndex" value="-1">
+                    
+                    <!-- TAB: GENERAL -->
+                    <div id="tab-general" class="tab-content active space-y-6">
+                        <div class="grid grid-cols-3 gap-6">
+                            <div><label class="text-[10px] font-black uppercase text-slate-400">Brand</label><input id="aBrand" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                            <div><label class="text-[10px] font-black uppercase text-slate-400">Model</label><input id="aModel" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                            <div><label class="text-[10px] font-black uppercase text-slate-400">Serial Number</label><input id="aSerial" class="w-full p-3 bg-slate-50 border rounded-xl outline-none font-mono"></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-6">
+                            <div><label class="text-[10px] font-black uppercase text-slate-400">User</label><input id="aUser" class="w-full p-3 bg-slate-50 border rounded-xl"></div>
+                            <div><label class="text-[10px] font-black uppercase text-slate-400">Dept</label><input id="aDept" class="w-full p-3 bg-slate-50 border rounded-xl"></div>
+                            <div><label class="text-[10px] font-black uppercase text-slate-400">Risk Profile</label><select id="aRisk" class="w-full p-3 bg-slate-50 border rounded-xl"><option>Low</option><option>Medium</option><option>High</option></select></div>
+                            <div><label class="text-[10px] font-black uppercase text-slate-400">Compliance</label><select id="aCompliance" class="w-full p-3 bg-slate-50 border rounded-xl"><option>Compliant</option><option>Non-Compliant</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-6 bg-slate-50 p-6 rounded-2xl border">
+                             <div class="col-span-4 flex justify-between items-center"><h4 class="text-[10px] font-black text-indigo-500 uppercase">Hardware & Financials</h4></div>
+                             <div><label class="text-[10px] font-bold text-slate-400">CPU</label><input id="aCPU" class="w-full bg-transparent border-b outline-none"></div>
+                             <div><label class="text-[10px] font-bold text-slate-400">RAM</label><input id="aRAM" class="w-full bg-transparent border-b outline-none"></div>
+                             <div><label class="text-[10px] font-bold text-slate-400">Storage</label><input id="aStorage" class="w-full bg-transparent border-b outline-none"></div>
+                             <div><label class="text-[10px] font-bold text-slate-400">Unit Cost ($)</label><input type="number" id="aCost" class="w-full bg-transparent border-b outline-none"></div>
+                             <div class="col-span-1 pt-4">
+                                <label class="text-[10px] font-black uppercase text-slate-400">Main Unit Purchase Date</label>
+                                <input type="date" id="aPurchaseDate" class="w-full p-2 bg-white border rounded-lg text-xs outline-none">
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: PERIPHERALS -->
+                    <div id="tab-peripherals" class="tab-content space-y-4">
+                        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-4">
+                            <p class="text-[10px] font-black text-indigo-500 uppercase">Linked Peripheral Registry</p>
+                        </div>
+                        <div id="peripheralsList" class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar"></div>
+                        <button type="button" onclick="addPeripheralRow()" class="mt-4 bg-white text-indigo-600 border border-indigo-200 px-6 py-2 rounded-xl font-black text-xs hover:shadow-md transition">+ Link New Peripheral Hardware</button>
+                    </div>
+
+                    <!-- TAB: MAINTENANCE -->
+                    <div id="tab-maintenance" class="tab-content space-y-4">
+                        <div id="maintenanceLogsList" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border">
+                            <input type="date" id="logDate" class="p-2 border rounded-lg text-xs outline-none">
+                            <input type="text" id="logNote" placeholder="Service details (e.g. Preventive Maintenance)" class="p-2 border rounded-lg text-xs outline-none">
+                            <button type="button" onclick="addMaintenanceLog()" class="bg-indigo-600 text-white rounded-lg text-xs font-bold">Log Event</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB: MEDIA & QR -->
+                    <div id="tab-media" class="tab-content grid grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-xs font-black uppercase text-slate-400 mb-2">Physical Asset Proof</h4>
+                            <img id="imagePreview" src="" class="asset-image-preview mb-4 hidden">
+                            <div id="imagePlaceholder" class="asset-image-preview flex items-center justify-center bg-slate-50 text-slate-300 font-bold text-sm mb-4">
+                                No Photo Registered
+                            </div>
+                            <input type="file" id="aPhoto" accept="image/*" onchange="previewImage(this)" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition">
+                        </div>
+                        <div class="flex flex-col items-center justify-center border-l pl-8">
+                            <h4 class="text-xs font-black uppercase text-slate-400 mb-4 text-center">GRC Identity Tag (QR)</h4>
+                            <div id="qrcode" class="p-4 bg-white border-4 border-slate-100 rounded-2xl shadow-inner"></div>
+                            <p class="text-[10px] text-slate-400 mt-2 font-mono" id="qrLabel">PENDING_SERIAL</p>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="mt-12 flex justify-end gap-4 border-t pt-6">
+                    <button type="button" onclick="saveAsset()" class="bg-indigo-600 text-white px-10 py-3 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition">Commit GRC Record</button>
+                    <button type="button" onclick="toggleModal('assetModal')" class="bg-slate-100 text-slate-500 px-10 py-3 rounded-2xl font-bold hover:bg-slate-200 transition">Cancel</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Core state management
-        let inventory = JSON.parse(localStorage.getItem('inventory')) || [
-            {
-                name: "Logistics Pro Box",
-                sku: "LOG-001",
-                category: "Storage",
-                price: 15.99,
-                qty: 120,
-                minStock: 10,
-                desc: "Heavy-duty cardboard storage box.",
-                img: "https://images.unsplash.com/photo-1623305466248-b0447de035e8?w=400"
-            },
-            {
-                name: "Digital Inventory Tablet",
-                sku: "TEC-202",
-                category: "Electronics",
-                price: 249.00,
-                qty: 4,
-                minStock: 5,
-                desc: "High-resolution tablet for warehouse management.",
-                img: "https://images.unsplash.com/photo-1652955058906-b42fa699fa15?w=400"
-            }
-        ];
+        // Media Persistence Logic
+        let db;
+        const request = indexedDB.open("GRCITAM_Media_v7", 1);
+        request.onupgradeneeded = e => {
+            db = e.target.result;
+            if(!db.objectStoreNames.contains("photos")) db.createObjectStore("photos", { keyPath: "serial" });
+        };
+        request.onsuccess = e => db = e.target.result;
 
-        // Persistence Logic
-        function saveToStorage() {
-            localStorage.setItem('inventory', JSON.stringify(inventory));
-            updateDashboard();
-        }
+        let assets = JSON.parse(localStorage.getItem('grcitam_v7_data')) || [];
+        let currentModalLogs = [];
 
-        // Modal Controls
         function toggleModal(id) {
-            const modal = document.getElementById(id);
-            modal.classList.toggle('hidden');
-            if (modal.classList.contains('hidden')) {
-                document.getElementById('productForm').reset();
-                document.getElementById('editIndex').value = "-1";
-                document.getElementById('modalTitle').innerText = "Add New Product";
+            const m = document.getElementById(id); 
+            m.classList.toggle('hidden');
+            if (m.classList.contains('hidden')) {
+                document.getElementById('assetForm').reset();
+                document.getElementById('imagePreview').classList.add('hidden');
+                document.getElementById('imagePlaceholder').classList.remove('hidden');
+                document.getElementById('qrcode').innerHTML = "";
+                document.getElementById('qrLabel').innerText = "PENDING_SERIAL";
+                document.getElementById('peripheralsList').innerHTML = "";
+                currentModalLogs = [];
+                switchTab('general');
             }
         }
 
-        // Dashboard Stats Logic
-        function updateDashboard() {
-            const totalItems = inventory.length;
-            const lowStockCount = inventory.filter(item => item.qty <= item.minStock).length;
-            const totalValue = inventory.reduce((sum, item) => sum + (item.price * item.qty), 0);
-
-            document.getElementById('statTotalItems').innerText = totalItems;
-            document.getElementById('statLowStock').innerText = lowStockCount;
-            document.getElementById('statTotalValue').innerText = '$' + totalValue.toLocaleString(undefined, {minimumFractionDigits: 2});
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${id}`).classList.add('active');
+            if (event) event.target.classList.add('active');
+            if(id === 'media') updateQR();
         }
 
-        // CRUD Operations
-        function saveProduct() {
-            const index = parseInt(document.getElementById('editIndex').value);
-            const product = {
-                name: document.getElementById('pName').value,
-                sku: document.getElementById('pSKU').value,
-                category: document.getElementById('pCategory').value,
-                price: parseFloat(document.getElementById('pPrice').value),
-                qty: parseInt(document.getElementById('pQty').value),
-                minStock: parseInt(document.getElementById('pMin').value),
-                desc: document.getElementById('pDesc').value,
-                img: `https://images.unsplash.com/photo-1675460191018-d0279659b5ce?w=400` // Default placeholder
+        function updateQR() {
+            const sn = document.getElementById('aSerial').value || "NO-SERIAL";
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = "";
+            new QRCode(qrContainer, { text: sn, width: 150, height: 150 });
+            document.getElementById('qrLabel').innerText = sn;
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const prev = document.getElementById('imagePreview');
+                    prev.src = e.target.result;
+                    prev.classList.remove('hidden');
+                    document.getElementById('imagePlaceholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function addPeripheralRow(type='', model='', serial='', sku='', purchaseDate='') {
+            const container = document.getElementById('peripheralsList');
+            const row = document.createElement('div');
+            row.className = "grid grid-cols-5 gap-2 bg-white p-3 rounded-xl border items-center fade-in shadow-sm";
+            row.innerHTML = `
+                <div class="col-span-1">
+                    <label class="text-[8px] font-black uppercase text-slate-300 block mb-1">Type</label>
+                    <input class="peri-type w-full text-[10px] p-1 border rounded outline-none" placeholder="e.g. Monitor" value="${type}">
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[8px] font-black uppercase text-slate-300 block mb-1">Model/Serial</label>
+                    <input class="peri-model w-full text-[10px] p-1 border rounded outline-none mb-1" placeholder="Model" value="${model}">
+                    <input class="peri-serial w-full text-[9px] p-1 border rounded font-mono outline-none" placeholder="Serial" value="${serial}">
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[8px] font-black uppercase text-slate-300 block mb-1">SKU</label>
+                    <input class="peri-sku w-full text-[9px] p-1 border rounded font-mono outline-none" placeholder="SKU" value="${sku}">
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[8px] font-black uppercase text-slate-300 block mb-1">Purchase Date</label>
+                    <input type="date" class="peri-date w-full text-[9px] p-1 border rounded outline-none" value="${purchaseDate}">
+                </div>
+                <div class="col-span-1 flex justify-end">
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-slate-300 hover:text-red-500 transition px-2">×</button>
+                </div>`;
+            container.appendChild(row);
+        }
+
+        function addMaintenanceLog() {
+            const date = document.getElementById('logDate').value;
+            const note = document.getElementById('logNote').value;
+            if(!date || !note) return;
+            currentModalLogs.unshift({ date, note, type: 'Service' });
+            renderLogs();
+            document.getElementById('logNote').value = "";
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('maintenanceLogsList');
+            container.innerHTML = currentModalLogs.map((l, i) => `
+                <div class="flex justify-between items-center p-3 bg-white border rounded-xl shadow-sm mb-2">
+                    <div class="text-[11px]"><span class="font-black text-slate-400 mr-2">${l.date}</span> ${l.note}</div>
+                    <button onclick="removeLog(${i})" class="text-slate-300 hover:text-red-400">×</button>
+                </div>`).join('');
+        }
+        function removeLog(i) { currentModalLogs.splice(i,1); renderLogs(); }
+
+        async function saveAsset() {
+            const idx = parseInt(document.getElementById('editIndex').value);
+            const serial = document.getElementById('aSerial').value;
+            if(!serial) return alert("Serial Number is required for GRC compliance.");
+
+            // Photo Management
+            const photoInput = document.getElementById('aPhoto');
+            if (photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.readAsDataURL(photoInput.files[0]);
+                reader.onload = () => {
+                    const tx = db.transaction("photos", "readwrite");
+                    tx.objectStore("photos").put({ serial: serial, data: reader.result });
+                };
+            }
+
+            const asset = {
+                brand: document.getElementById('aBrand').value,
+                model: document.getElementById('aModel').value,
+                serial: serial,
+                user: document.getElementById('aUser').value,
+                dept: document.getElementById('aDept').value,
+                risk: document.getElementById('aRisk').value,
+                compliance: document.getElementById('aCompliance').value,
+                cpu: document.getElementById('aCPU').value,
+                ram: document.getElementById('aRAM').value,
+                storage: document.getElementById('aStorage').value,
+                cost: parseFloat(document.getElementById('aCost').value) || 0,
+                purchaseDate: document.getElementById('aPurchaseDate').value,
+                maintenance: currentModalLogs,
+                peripherals: Array.from(document.querySelectorAll('#peripheralsList > div')).map(r => ({
+                    type: r.querySelector('.peri-type').value,
+                    model: r.querySelector('.peri-model').value,
+                    serial: r.querySelector('.peri-serial').value,
+                    sku: r.querySelector('.peri-sku').value,
+                    purchaseDate: r.querySelector('.peri-date').value
+                }))
             };
 
-            if (index === -1) {
-                inventory.push(product);
-            } else {
-                inventory[index] = product;
-            }
-
-            saveToStorage();
-            renderInventory();
-            toggleModal('productModal');
+            if (idx === -1) assets.unshift(asset); else assets[idx] = asset;
+            localStorage.setItem('grcitam_v7_data', JSON.stringify(assets));
+            renderAssets(); toggleModal('assetModal'); updateStats();
         }
 
-        function deleteProduct(index) {
-            if (confirm("Are you sure you want to remove this item from inventory?")) {
-                inventory.splice(index, 1);
-                saveToStorage();
-                renderInventory();
-            }
+        function updateStats() {
+            document.getElementById('statTotalAssets').innerText = assets.length;
+            document.getElementById('statHighRisk').innerText = assets.filter(a => a.risk === 'High').length;
+            document.getElementById('statNonCompliant').innerText = assets.filter(a => a.compliance !== 'Compliant').length;
+            const val = assets.reduce((s, a) => s + (parseFloat(a.cost) || 0), 0);
+            document.getElementById('statTotalValue').innerText = '$' + val.toLocaleString(undefined, {minimumFractionDigits: 2});
         }
 
-        function editProduct(index) {
-            const p = inventory[index];
-            document.getElementById('editIndex').value = index;
-            document.getElementById('pName').value = p.name;
-            document.getElementById('pSKU').value = p.sku;
-            document.getElementById('pCategory').value = p.category;
-            document.getElementById('pPrice').value = p.price;
-            document.getElementById('pQty').value = p.qty;
-            document.getElementById('pMin').value = p.minStock;
-            document.getElementById('pDesc').value = p.desc;
+        async function editAsset(idx) {
+            const a = assets[idx];
+            document.getElementById('editIndex').value = idx;
+            document.getElementById('aBrand').value = a.brand;
+            document.getElementById('aModel').value = a.model;
+            document.getElementById('aSerial').value = a.serial;
+            document.getElementById('aUser').value = a.user;
+            document.getElementById('aDept').value = a.dept;
+            document.getElementById('aRisk').value = a.risk;
+            document.getElementById('aCompliance').value = a.compliance;
+            document.getElementById('aCPU').value = a.cpu;
+            document.getElementById('aRAM').value = a.ram;
+            document.getElementById('aStorage').value = a.storage;
+            document.getElementById('aCost').value = a.cost;
+            document.getElementById('aPurchaseDate').value = a.purchaseDate || "";
             
-            document.getElementById('modalTitle').innerText = "Edit Product";
-            toggleModal('productModal');
+            currentModalLogs = a.maintenance || [];
+            renderLogs();
+            document.getElementById('peripheralsList').innerHTML = "";
+            (a.peripherals || []).forEach(p => addPeripheralRow(p.type, p.model, p.serial, p.sku, p.purchaseDate));
+
+            // Load Image
+            if(db) {
+                const tx = db.transaction("photos", "readonly");
+                const get = tx.objectStore("photos").get(a.serial);
+                get.onsuccess = () => {
+                    if(get.result) {
+                        const prev = document.getElementById('imagePreview');
+                        prev.src = get.result.data;
+                        prev.classList.remove('hidden');
+                        document.getElementById('imagePlaceholder').classList.add('hidden');
+                    }
+                };
+            }
+
+            document.getElementById('modalTitle').innerText = "Update Governance Record";
+            toggleModal('assetModal');
         }
 
-        // Rendering Engine
-        function renderInventory() {
-            const list = document.getElementById('inventoryList');
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = inventory.filter(p => 
-                p.name.toLowerCase().includes(search) || 
-                p.sku.toLowerCase().includes(search)
+        function renderAssets() {
+            const list = document.getElementById('assetList');
+            const search = (document.getElementById('searchInput').value || "").toLowerCase();
+            const filtered = assets.filter(a => 
+                a.brand.toLowerCase().includes(search) || 
+                a.model.toLowerCase().includes(search) ||
+                a.serial.toLowerCase().includes(search) ||
+                (a.user && a.user.toLowerCase().includes(search))
             );
 
             list.innerHTML = "";
             document.getElementById('emptyState').classList.toggle('hidden', filtered.length > 0);
 
-            filtered.forEach((p, idx) => {
-                const statusClass = p.qty <= p.minStock 
-                    ? "bg-red-100 text-red-700" 
-                    : "bg-green-100 text-green-700";
-                
-                const statusText = p.qty <= p.minStock ? "Low Stock" : "In Stock";
-
+            filtered.forEach((a, i) => {
+                const peris = a.peripherals || [];
                 list.innerHTML += `
-                    <tr class="stock-row transition fade-in">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
-                                    <img class="h-10 w-10 rounded-lg object-cover bg-gray-100" src="${p.img}" alt="">
-                                </div>
-                                <div class="ml-4">
-                                    <div class="text-sm font-semibold text-gray-900">${p.name}</div>
-                                    <div class="text-xs text-gray-500 truncate w-32">${p.desc}</div>
+                    <tr class="hover:bg-slate-50 border-b transition-colors">
+                        <td class="px-6 py-6">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center text-[8px] font-black text-slate-300 uppercase">Audit_Img</div>
+                                <div>
+                                    <p class="text-sm font-black text-slate-900">${a.brand} ${a.model}</p>
+                                    <p class="text-[9px] font-mono text-indigo-500">${a.serial}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600 font-mono">${p.sku}</td>
-                        <td class="px-6 py-4 text-sm text-gray-600">${p.category}</td>
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">$${p.price.toFixed(2)}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900 font-semibold">${p.qty}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2.5 py-1 text-xs font-bold rounded-full ${statusClass}">
-                                ${statusText}
-                            </span>
+                        <td class="px-6">
+                            <p class="text-[10px] text-slate-500 font-bold">${peris.length} Peripherals</p>
+                            ${peris.slice(0,1).map(p => `<p class="text-[8px] text-slate-400 truncate w-32">${p.type} (${p.sku || 'N/A'})</p>`).join('')}
                         </td>
-                        <td class="px-6 py-4 text-right space-x-2">
-                            <button onclick="editProduct(${idx})" class="text-blue-600 hover:text-blue-900 font-medium text-sm">Edit</button>
-                            <button onclick="deleteProduct(${idx})" class="text-red-600 hover:text-red-900 font-medium text-sm">Delete</button>
+                        <td class="px-6">
+                            <p class="text-[10px] font-bold text-slate-700">${a.cpu} | ${a.ram}</p>
+                            <p class="text-[9px] text-slate-400 uppercase">Main P/D: ${a.purchaseDate || 'N/A'}</p>
+                        </td>
+                        <td class="px-6">
+                            <p class="text-sm font-bold text-slate-800">${a.user || 'UNASSIGNED'}</p>
+                            <p class="text-[9px] text-slate-400 uppercase font-black">${a.dept || 'GLOBAL'}</p>
+                        </td>
+                        <td class="px-6 text-[10px] text-slate-500">
+                            Logs: ${a.maintenance.length}<br>
+                            <span class="text-[9px] text-slate-400">Last: ${a.maintenance[0]?.date || 'None'}</span>
+                        </td>
+                        <td class="px-6">
+                            <span class="px-2 py-0.5 text-[9px] font-black uppercase rounded-full badge-risk-${a.risk.toLowerCase()}">${a.risk} Risk</span>
+                            <div class="text-[9px] mt-1 font-bold ${a.compliance === 'Compliant' ? 'text-green-500' : 'text-red-500'} uppercase underline decoration-2">${a.compliance}</div>
+                        </td>
+                        <td class="px-6 text-right">
+                            <div class="flex justify-end gap-3">
+                                <button onclick="editAsset(${i})" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded text-[10px] font-black hover:bg-indigo-600 hover:text-white transition">OPEN</button>
+                                <button onclick="deleteAsset(${i})" class="text-slate-300 hover:text-red-500 transition">×</button>
+                            </div>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        // Initial Load
-        window.onload = () => {
-            updateDashboard();
-            renderInventory();
-        };
+        function deleteAsset(i) {
+            if(confirm("DANGER: This will permanently remove the asset from the register.")) {
+                assets.splice(i,1);
+                localStorage.setItem('grcitam_v7_data', JSON.stringify(assets));
+                renderAssets(); updateStats();
+            }
+        }
+
+        function downloadComplianceReport() {
+            const dateStr = new Date().toISOString().split('T')[0];
+            const content = `GRCITAM GOVERNANCE & COMPLIANCE AUDIT\nExport Date: ${dateStr}\n` + 
+                `--------------------------------------------------\n` +
+                assets.map(a => {
+                    const pList = (a.peripherals || []).map(p => `   > [${p.type}] SN:${p.serial} SKU:${p.sku} P/D:${p.purchaseDate || 'N/A'}`).join('\n');
+                    return `[${a.serial}] ${a.brand} ${a.model}\nPurchase Date: ${a.purchaseDate || 'N/A'}\nUser: ${a.user} | Dept: ${a.dept}\nRisk: ${a.risk} | Compliance: ${a.compliance}\nPeripherals:\n${pList || '   (None)'}\n---`;
+                }).join('\n\n');
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `GRCITAM_Audit_${dateStr}.txt`; a.click();
+        }
+
+        window.onload = () => { renderAssets(); updateStats(); };
     </script>
 </body>
 </html>
-
